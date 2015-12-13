@@ -1,0 +1,88 @@
+<!doctype html>
+<html lang=en>
+
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width initial-scale=1" />
+  <meta http-equiv="X-UA-Compatible" content="IE=edge">
+  <title>search ipfs on ipfs</title>
+  <meta name="description" content="search ipfs on ipfs">
+  <link rel="stylesheet" href="main.css">
+</head>
+
+<body class="container">
+
+  <header>
+    <form action="https://duckduckgo.com/">
+      <input id="ddg" type="hidden" name="sites" value="ipfs.io" />
+      <label for="search-box" class="search-icon">search:</label>
+      <input type="search" name="q" id="search-box" placeholder="search the distributed web" autocomplete="off" autofocus />
+    </form>
+    <noscript>Looks like you have javascript disabled. Since this site's functionality relies on javascript, your search will be sent to duckduckgo.com. (It'll still search only IPFS pages.)</noscript>
+
+  </header>
+
+  <main>
+    <div id="results-count"></div>
+    <div id="results">
+      <p>This is a tool for searching <a href="https://ipfs.io">ipfs</a>, although it doesn't do that good of a job (yet). It uses <a href="http://lunrjs.com">lunr.js</a> to perform the search, and the search index is built by scraping results from <a href="https://searx.netzspielplatz.de/">searx.netzplielplatz.de</a> (a public instance of <a href="https://asciimoo.github.io/searx/">searx</a>, which is itself a metasearch engine, aggregating search results from major search providers). As such, the only thing you're searching here are titles, URLs, and text snippets from about 1100 ipfs pages, because that's the information that's able to be scraped from searx, and those are the pages that have been indexed by major search providers. This is an alpha tool, and shouldn't be considered a good way to search ipfs.</p><p>The source for this searching tool is <a href="https://github.com/doesntgolf/noetic-search">here</a>, and the source for the scraping tool is <a href="https://github.com/doesntgolf/noetic-searx-scraper">here</a>. (Be warned, this was hacked together quickly [and I'm a shit coder] so some of the code--espcially the scraping tool--is a bit gross!)</p><p>The main thing I'm left wondering after doing this: why are there so many PDFs of <a href="?q=president">1960's presidential checklists and daily briefings</a> on ipfs?</p>
+    </div>
+  </main>
+
+    <script>
+      document.getElementsByTagName("form")[0].setAttribute("action","index.html");
+      document.getElementById("ddg").remove();
+    </script>
+
+    <script src="lunr.min.js"></script>
+    <script src="idx.js"></script>
+
+    <script>
+      var db = pages.reduce(function (acc, page) {
+        acc[page.parsed_url] = page
+        return acc
+      }, {})
+
+      var index = lunr(function () {
+        this.field('title', {boost: 10})
+        this.field('content')
+        this.ref('parsed_url')
+      })
+
+      pages.forEach(function (page) {
+        index.add(page)
+      })
+
+      function getURLParameter(name) {
+        return decodeURIComponent((new RegExp('[?|&]' + name + '=' + '([^&;]+?)(&|#|;|$)').exec(location.search)||[,""])[1].replace(/\+/g, '%20'))||null
+      }
+
+      function search() {
+        var resultsCount = 0;
+        var resultsListHtml = '<ul class="results-list">';
+        var query = getURLParameter('q');
+        var results = index.search(query).forEach(function (result) {
+          i = db[result.ref];
+          resultsListHtml += '<li><div class="i-title"><a href="' + i.parsed_url + '">' + i.title + '</a></div><div class="i-score">score: ' + result.score + '</div><div class="i-loc">' + i.parsed_url + '</div><div class="i-content">' + i.content + '</div></li>';
+          resultsCount++;
+        })
+        resultsListHtml += '</ul>';
+        if (resultsCount > 0) {
+          resultsListHtml += '<footer><p><span >···</span> fin <span>···</span><a href="#">back to top</a></p></footer>';
+        } else {
+          resultsListHtml += '<footer><p><span>···</span> please try again <span>···</span></p></footer>';
+        }
+
+        if (query != null) {
+          document.getElementById('results').innerHTML = resultsListHtml;
+          document.getElementById('results-count').innerHTML = '<span>···</span> ' + resultsCount + ' result(s) for "' + query + '" <span>···</span>';
+          document.getElementById('search-box').value = query;
+        }
+      }
+      search();
+    </script>
+
+</body>
+
+</html>
+
