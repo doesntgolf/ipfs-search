@@ -63,7 +63,7 @@
         var query = getURLParameter('q');
         var results = index.search(query).forEach(function (result) {
           i = db[result.ref];
-          resultsListHtml += '<li><div class="i-title"><a href="' + i.parsed_url + '">' + i.title + '</a></div><div class="i-score">score: ' + result.score + '</div><div class="i-loc">' + i.parsed_url + '</div><div class="i-content">' + i.content + '</div></li>';
+          resultsListHtml += '<li><div class="i-title"><a href="https://ipfs.io' + i.parsed_url + '">' + i.title + '</a></div><div class="i-score">score: ' + result.score + '</div><div class="i-loc">' + i.parsed_url + '</div><div class="i-content">' + i.content + '</div></li>';
           resultsCount++;
         })
         resultsListHtml += '</ul>';
